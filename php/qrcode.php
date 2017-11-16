@@ -35,7 +35,7 @@ class QRCode {
 
     var $qrDataList;
 
-    function QRCode() {
+    function __construct() {
         $this->typeNumber = 1;
         $this->errorCorrectLevel = QR_ERROR_CORRECT_LEVEL_H;
         $this->qrDataList = array();
@@ -66,19 +66,23 @@ class QRCode {
         switch($mode) {
 
         case QR_MODE_NUMBER :
-            $this->addDataImpl(new QRNumber($data) );
+            $var = new QRNumber(QR_MODE_NUMBER, $data);
+            $this->addDataImpl($var);
             break;
 
         case QR_MODE_ALPHA_NUM :
-            $this->addDataImpl(new QRAlphaNum($data) );
+            $var = new QRAlphaNum(QR_MODE_ALPHA_NUM, $data) ;
+            $this->addDataImpl($var);
             break;
 
         case QR_MODE_8BIT_BYTE :
-            $this->addDataImpl(new QR8BitByte($data) );
+            $var = new QR8BitByte(QR_MODE_8BIT_BYTE, $data);
+            $this->addDataImpl($var);
             break;
 
         case QR_MODE_KANJI :
-            $this->addDataImpl(new QRKanji($data) );
+            $var = new QRKanji(QR_MODE_8BIT_BYTE, $data);
+            $this->addDataImpl($var);
             break;
 
         default :
@@ -357,7 +361,6 @@ class QRCode {
     function createData($typeNumber, $errorCorrectLevel, $dataArray) {
 
         $rsBlocks = QRRSBlock::getRSBlocks($typeNumber, $errorCorrectLevel);
-
         $buffer = new QRBitBuffer();
 
         for ($i = 0; $i < count($dataArray); $i++) {
@@ -371,7 +374,6 @@ class QRCode {
         for ($i = 0; $i < count($rsBlocks); $i++) {
             $totalDataCount += $rsBlocks[$i]->getDataCount();
         }
-
         if ($buffer->getLengthInBits() > $totalDataCount * 8) {
             trigger_error("code length overflow. ("
                 . $buffer->getLengthInBits()
@@ -901,8 +903,8 @@ class QRUtil {
 
 class QRRSBlock {
 
-    var $totalCount;
-    var $dataCount;
+    public $totalCount;
+    public $dataCount;
 
 	static $QR_RS_BLOCK_TABLE = array(
 
@@ -972,12 +974,12 @@ class QRRSBlock {
 		array(6, 43, 15, 2, 44, 16)
 
 	);
-
-    function QRRSBlock($totalCount, $dataCount) {
+    
+    function __construct($totalCount, $dataCount) {
         $this->totalCount = $totalCount;
         $this->dataCount  = $dataCount;
     }
-
+    
     function getDataCount() {
         return $this->dataCount;
     }
@@ -990,20 +992,16 @@ class QRRSBlock {
 
         $rsBlock = QRRSBlock::getRsBlockTable($typeNumber, $errorCorrectLevel);
         $length = count($rsBlock) / 3;
-
         $list = array();
 
         for ($i = 0; $i < $length; $i++) {
-
             $count = $rsBlock[$i * 3 + 0];
             $totalCount = $rsBlock[$i * 3 + 1];
             $dataCount  = $rsBlock[$i * 3 + 2];
-
             for ($j = 0; $j < $count; $j++) {
                 $list[] = new QRRSBlock($totalCount, $dataCount);
             }
         }
-
         return $list;
     }
 
@@ -1030,8 +1028,8 @@ class QRRSBlock {
 
 class QRNumber extends QRData {
 
-    function QRNumber($data) {
-        QRData::QRData(QR_MODE_NUMBER, $data);
+    function __construct($mode, $data) {
+        QRData::QRData($mode, $data);
     }
 
     function write(&$buffer) {
@@ -1087,8 +1085,8 @@ class QRNumber extends QRData {
 
 class QRKanji extends QRData {
 
-    function QRKanji($data) {
-        QRData::QRData(QR_MODE_KANJI, $data);
+    function __construct($mode, $data) {
+        QRData::QRData($mode, $data);
     }
 
     function write(&$buffer) {
@@ -1132,8 +1130,8 @@ class QRKanji extends QRData {
 
 class QRAlphaNum extends QRData {
 
-    function QRAlphaNum($data) {
-        QRData::QRData(QR_MODE_ALPHA_NUM, $data);
+    function __construct($mode, $data) {
+        QRData::QRData($mode, $data);
     }
 
     function write(&$buffer) {
@@ -1189,8 +1187,9 @@ class QRAlphaNum extends QRData {
 
 class QR8BitByte extends QRData {
 
-    function QR8BitByte($data) {
-        QRData::QRData(QR_MODE_8BIT_BYTE, $data);
+     
+    function __construct($mode, $data) {
+        QRData::QRData($mode, $data);
     }
 
     function write(&$buffer) {
@@ -1213,10 +1212,12 @@ class QR8BitByte extends QRData {
 class QRData {
 
     var $mode;
-
     var $data;
-
-    function QRData($mode, $data) {
+    
+    public function QRData($mode, $data) {
+        self::__construct($mode, $data);
+    }
+    function __construct($mode, $data) {
         $this->mode = $mode;
         $this->data = $data;
     }
@@ -1242,8 +1243,8 @@ class QRData {
         if (1 <= $type && $type < 10) {
 
             // 1 - 9
-
             switch($this->mode) {
+                
             case QR_MODE_NUMBER     : return 10;
             case QR_MODE_ALPHA_NUM     : return 9;
             case QR_MODE_8BIT_BYTE    : return 8;
@@ -1358,7 +1359,7 @@ class QRPolynomial {
 
     var $num;
 
-    function QRPolynomial($num, $shift = 0) {
+    function __construct($num, $shift = 0) {
 
         $offset = 0;
 
@@ -1492,7 +1493,7 @@ class QRBitBuffer {
     var $buffer;
     var $length;
 
-    function QRBitBuffer() {
+    function __construct() {
         $this->buffer = array();
         $this->length = 0;
     }
